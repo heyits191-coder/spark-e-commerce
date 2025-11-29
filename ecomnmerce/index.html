@@ -5,15 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>STREET.CO</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Oswald:wght@400;500;700&display=swap" rel="stylesheet">
     
-    <!-- Tailwind Config -->
     <script>
       tailwind.config = {
         theme: {
@@ -44,34 +41,27 @@
       }
     </script>
 
-    <!-- Custom Styles -->
     <style>
-      /* Hide scrollbar for Chrome, Safari and Opera */
       .no-scrollbar::-webkit-scrollbar {
           display: none;
       }
-      /* Hide scrollbar for IE, Edge and Firefox */
       .no-scrollbar {
-          -ms-overflow-style: none;  /* IE and Edge */
-          scrollbar-width: none;  /* Firefox */
+          -ms-overflow-style: none;
+          scrollbar-width: none;
       }
     </style>
 
-    <!-- Import Map for Modules -->
     <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@18.2.0",
-    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-    "lucide-react": "https://esm.sh/lucide-react@0.263.1",
-    "@google/genai": "https://esm.sh/@google/genai@0.1.1",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/"
-  }
-}
-</script>
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "lucide-react": "https://esm.sh/lucide-react@0.263.1",
+        "@google/generative-ai": "https://esm.sh/@google/generative-ai@0.1.3"
+      }
+    }
+    </script>
 
-    <!-- Babel for in-browser compilation -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   </head>
   <body class="bg-white text-black antialiased">
@@ -81,36 +71,18 @@
       import React, { useState, useEffect, useRef } from 'react';
       import { createRoot } from 'react-dom/client';
       import { ShoppingBag, Search, Menu, Plus, X, Minus, Trash2, Sparkles, Send } from 'lucide-react';
-      import { GoogleGenAI } from '@google/genai';
+      // Corrected Import
+      import { GoogleGenAI } from '@google/generative-ai';
 
-      // --- ENVIRONMENT POLYFILL ---
-      // In a real build, this comes from env vars. For single file, we mock it.
-      // REPLACE 'YOUR_API_KEY_HERE' WITH YOUR ACTUAL KEY IF HOSTING STATICALLY
+      // --- ENVIRONMENT SETUP ---
+      // IMPORTANT: Replace 'YOUR_API_KEY_HERE' with your actual Gemini API Key
+      const API_KEY = 'YOUR_API_KEY_HERE'; 
+
       window.process = {
         env: {
-          API_KEY: window.process?.env?.API_KEY || 'YOUR_API_KEY_HERE'
+          API_KEY: API_KEY
         }
       };
-
-      // --- TYPES ---
-      // (Interfaces are stripped by Babel but kept for structure)
-      /*
-      interface Product {
-        id: string;
-        name: string;
-        price: number;
-        image: string;
-        category: string;
-        isNew?: boolean;
-      }
-      interface CartItem extends Product {
-        quantity: number;
-      }
-      interface ChatMessage {
-        role: 'user' | 'model';
-        text: string;
-      }
-      */
 
       // --- CONSTANTS ---
       const PRODUCTS = [
@@ -504,28 +476,32 @@
               throw new Error('API Key missing');
             }
 
-            const ai = new GoogleGenAI({ apiKey });
-            const model = ai.models;
+            // Correct SDK Usage
+            const genAI = new GoogleGenAI(apiKey);
+            const model = genAI.getGenerativeModel({ 
+                model: "gemini-1.5-flash",
+                systemInstruction: SYSTEM_INSTRUCTION 
+            });
             
-            const historyText = messages.map(m => `${m.role === 'user' ? 'User' : 'Stylist'}: ${m.text}`).join('\n');
-            const prompt = `${historyText}\nUser: ${userMessage}\nStylist:`;
+            // Build chat history
+            const history = messages.map(m => ({
+                role: m.role,
+                parts: [{ text: m.text }]
+            }));
 
-            const response = await model.generateContent({
-              model: 'gemini-2.5-flash',
-              contents: prompt,
-              config: {
-                systemInstruction: SYSTEM_INSTRUCTION,
-              }
+            const chat = model.startChat({
+                history: history,
             });
 
-            const reply = response.text || "Sorry, I'm offline right now.";
+            const result = await chat.sendMessage(userMessage);
+            const reply = result.response.text();
 
             setMessages(prev => [...prev, { role: 'model', text: reply }]);
           } catch (error) {
             console.error('AI Error:', error);
             const errorMsg = error.message === 'API Key missing' 
-              ? "Missing API Key. Please update the index.html file." 
-              : "Can't connect to the server right now.";
+              ? "Missing API Key. Check the source code line 73." 
+              : "Connection lost. Try again later.";
             setMessages(prev => [...prev, { role: 'model', text: errorMsg }]);
           } finally {
             setIsLoading(false);

@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>STREET.CO - Full Version</title>
+    <title>STREET.CO - Final Fix</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Oswald:wght@400;500;700&display=swap" rel="stylesheet">
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -28,46 +26,33 @@
       tailwind.config = {
         theme: {
           extend: {
-            fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-              display: ['Oswald', 'sans-serif'],
-            },
-            colors: {
-              street: { black: '#000000', white: '#FFFFFF', gray: '#F3F3F3', red: '#FF0000' }
-            },
+            fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Oswald', 'sans-serif'] },
+            colors: { street: { black: '#000000', white: '#FFFFFF', gray: '#F3F3F3', red: '#FF0000' } },
             animation: { 'marquee': 'marquee 25s linear infinite' },
             keyframes: { marquee: { '0%': { transform: 'translateX(0%)' }, '100%': { transform: 'translateX(-100%)' } } }
           },
         },
       }
     </script>
-
-    <style>
-      .no-scrollbar::-webkit-scrollbar { display: none; }
-      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      body { opacity: 0; transition: opacity 0.5s ease-in; } 
-    </style>
+    <style>body { opacity: 0; transition: opacity 0.3s; } .no-scrollbar::-webkit-scrollbar { display: none; }</style>
 </head>
 <body class="bg-white text-black antialiased">
     <div id="root"></div>
 
-    <script>
-      window.onload = () => document.body.style.opacity = '1';
-    </script>
+    <script>window.onload = () => document.body.style.opacity = '1';</script>
 
     <script type="text/babel" data-type="module">
       const { useState, useEffect, useRef } = React;
       import { GoogleGenerativeAI } from "@google/generative-ai";
 
-      // ----------------------------------------------------
-      // IMPORTANT: PASTE YOUR API KEY HERE
-      // ----------------------------------------------------
+      // ==========================================
+      // 👇 APNI API KEY YAHAN PASTE KAREIN 👇
+      // ==========================================
       const API_KEY = "YOUR_API_KEY_HERE"; 
-      // ----------------------------------------------------
+      // ==========================================
 
-      // --- ICONS (SVG Code direct to prevent crashing) ---
+      // --- ICONS ---
       const Icon = ({ path }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">{path}</svg>;
-      
       const Icons = {
         Menu: <path d="M4 6h16M4 12h16M4 18h16" />,
         Search: <path d="m21 21-4.3-4.3M11 8a7 7 0 1 0 0 14 7 7 0 0 0 0-14Z" />,
@@ -92,249 +77,164 @@
         { id: '8', name: 'CYBER BEANIE', price: 900, category: 'ACCESSORIES', image: 'https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?q=80&w=1000&auto=format&fit=crop' }
       ];
 
-      const SYSTEM_INSTRUCTION = `You are the AI Stylist for STREET.CO. Tone: Edgy, brutalist, high-fashion. Currency: INR. Only recommend from: ${PRODUCTS.map(p => p.name).join(', ')}.`;
-
       // --- COMPONENTS ---
-      const Marquee = () => (
-        <div className="bg-street-black text-street-white py-2 overflow-hidden relative z-50">
-          <div className="whitespace-nowrap animate-marquee font-display font-bold tracking-[0.2em] text-xs md:text-sm">
-            <span className="mx-4">FREE SHIPPING WORLDWIDE • NEW DROP AVAILABLE • URBAN CHAOS COLLECTION • </span>
-            <span className="mx-4">FREE SHIPPING WORLDWIDE • NEW DROP AVAILABLE • URBAN CHAOS COLLECTION • </span>
-          </div>
-        </div>
-      );
-
-      const Navbar = ({ cartCount, onCartClick }) => (
-        <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100">
+      const Navbar = ({ count, onOpen }) => (
+        <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b">
           <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="md:hidden"><Icon path={Icons.Menu} /></div>
-              <div className="hidden md:flex gap-6 text-sm font-medium tracking-wide">
-                <a href="#" className="hover:underline">SHOP</a>
-                <a href="#" className="hover:underline">COLLECTIONS</a>
-                <a href="#" className="text-street-red">SALE</a>
-              </div>
-            </div>
-            <div className="absolute left-1/2 transform -translate-x-1/2">
-              <h1 className="font-display font-bold text-2xl md:text-3xl tracking-tighter">STREET.CO</h1>
-            </div>
-            <div className="flex items-center gap-6">
+            <div className="flex gap-4"><Icon path={Icons.Menu} /><span className="hidden md:block text-sm font-bold pt-1">SHOP</span></div>
+            <h1 className="font-display font-bold text-3xl tracking-tighter absolute left-1/2 -translate-x-1/2">STREET.CO</h1>
+            <div className="flex gap-6 relative" onClick={onOpen}>
               <Icon path={Icons.Search} />
-              <div className="relative cursor-pointer" onClick={onCartClick}>
-                <Icon path={Icons.Bag} />
-                {cartCount > 0 && <span className="absolute -top-2 -right-2 bg-street-red text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">{cartCount}</span>}
-              </div>
+              <div className="cursor-pointer"><Icon path={Icons.Bag} />{count > 0 && <span className="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">{count}</span>}</div>
             </div>
           </div>
         </nav>
       );
 
       const Hero = () => {
-        const [index, setIndex] = useState(0);
-        const images = [
-          "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=2669&auto=format&fit=crop",
-          "https://images.unsplash.com/photo-1617331140180-e843d63d3f9f?q=80&w=2070&auto=format&fit=crop"
-        ];
-        useEffect(() => { const t = setInterval(() => setIndex(i => (i + 1) % images.length), 4000); return () => clearInterval(t); }, []);
-
+        const [i, setI] = useState(0);
+        const imgs = ["https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=2669","https://images.unsplash.com/photo-1617331140180-e843d63d3f9f?q=80&w=2070"];
+        useEffect(() => { const t = setInterval(() => setI(x => (x + 1) % imgs.length), 4000); return () => clearInterval(t); }, []);
         return (
-          <section className="relative h-[80vh] w-full bg-street-black overflow-hidden">
-            <div className="absolute inset-0">
-              {images.map((img, i) => (
-                <div key={img} className={`absolute inset-0 transition-opacity duration-1000 ${i === index ? 'opacity-100' : 'opacity-0'}`}>
-                  <img src={img} className="w-full h-full object-cover opacity-60" />
-                </div>
-              ))}
-              <div className="absolute inset-0 bg-gradient-to-t from-street-black via-transparent to-transparent"></div>
-            </div>
-            <div className="relative h-full flex flex-col items-center justify-center text-center px-4 z-30">
-              <h2 className="font-display font-bold text-6xl md:text-9xl text-white tracking-tighter mb-6 mix-blend-difference">URBAN<br/>CHAOS</h2>
-              <button className="bg-white text-black font-display font-bold text-lg px-8 py-3 tracking-widest hover:bg-street-red hover:text-white transition-all">SHOP NOW</button>
-            </div>
+          <section className="relative h-[80vh] bg-black overflow-hidden flex items-center justify-center">
+            {imgs.map((src, idx) => <img key={src} src={src} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${idx === i ? 'opacity-60' : 'opacity-0'}`} />)}
+            <div className="relative z-10 text-center"><h2 className="text-white text-8xl font-display font-bold tracking-tighter mix-blend-difference mb-6">URBAN<br/>CHAOS</h2><button className="bg-white px-8 py-3 font-bold tracking-widest hover:bg-red-600 hover:text-white transition">SHOP NOW</button></div>
           </section>
         );
       };
 
-      // --- ADDED BACK: NEWSLETTER ---
-      const Newsletter = () => {
-        return (
-          <section className="bg-street-gray py-20 mt-12 border-t border-gray-200">
-            <div className="max-w-4xl mx-auto text-center px-6">
-              <h3 className="font-display font-bold text-3xl md:text-4xl mb-4 tracking-widest uppercase">Join the Movement</h3>
-              <p className="text-gray-500 mb-8 max-w-lg mx-auto font-sans tracking-wide">
-                Subscribe to our newsletter for exclusive drops, early access, and secret sales.
-              </p>
-              <div className="flex flex-col sm:flex-row max-w-md mx-auto gap-0">
-                <input 
-                  type="email" 
-                  placeholder="ENTER EMAIL" 
-                  className="flex-1 bg-white px-4 py-4 text-sm font-medium border border-gray-200 focus:border-black focus:outline-none focus:ring-0 placeholder-gray-400 font-sans"
-                />
-                <button className="bg-black text-white px-8 py-4 font-display font-bold tracking-widest text-sm hover:bg-street-red transition-colors duration-300 uppercase">
-                  Join
-                </button>
-              </div>
-            </div>
-          </section>
-        );
-      };
-
-      const ProductCard = ({ product, onAddToCart }) => (
-        <div className="group relative cursor-pointer">
-          <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
-            <img src={product.image} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-            {product.isNew && <div className="absolute top-2 left-2 bg-black text-white text-[10px] font-bold px-2 py-1">NEW</div>}
-            <button onClick={(e) => { e.stopPropagation(); onAddToCart(product); }} className="absolute bottom-4 right-4 bg-white text-black p-3 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-black hover:text-white flex items-center justify-center">
-              <Icon path={Icons.Plus} />
-            </button>
-          </div>
-          <div className="mt-4">
-            <h3 className="font-display font-bold text-lg">{product.name}</h3>
-            <p className="text-sm">₹{product.price}</p>
-          </div>
-        </div>
-      );
-
-      const CartDrawer = ({ isOpen, onClose, items, onUpdate, onRemove }) => {
-        if (!isOpen) return null;
+      const Cart = ({ open, close, items, update, remove }) => {
+        if (!open) return null;
         return (
           <div className="fixed inset-0 z-50 flex justify-end">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
-            <div className="relative w-full md:w-[450px] bg-white h-full shadow-2xl flex flex-col animate-slideIn">
-              <div className="p-6 border-b flex justify-between items-center">
-                <h2 className="font-display font-bold text-2xl">CART ({items.length})</h2>
-                <button onClick={onClose}><Icon path={Icons.X} /></button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                {items.length === 0 ? <div className="text-center text-gray-400 mt-20">Cart Empty</div> : 
-                  items.map(item => (
-                    <div key={item.id} className="flex gap-4">
-                      <img src={item.image} className="w-20 h-24 object-cover bg-gray-100" />
-                      <div className="flex-1 flex flex-col justify-between">
-                        <div>
-                          <div className="flex justify-between"><h3 className="font-bold text-sm">{item.name}</h3><button onClick={() => onRemove(item.id)} className="text-gray-400 hover:text-red-500"><Icon path={Icons.Trash} /></button></div>
-                          <p className="text-xs text-gray-500">{item.category}</p>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <div className="flex border items-center"><button onClick={() => onUpdate(item.id, -1)} className="p-2"><Icon path={Icons.Minus}/></button><span className="px-2 text-sm">{item.quantity}</span><button onClick={() => onUpdate(item.id, 1)} className="p-2"><Icon path={Icons.Plus}/></button></div>
-                          <span className="font-bold text-sm">₹{item.price * item.quantity}</span>
-                        </div>
+            <div className="absolute inset-0 bg-black/50" onClick={close}></div>
+            <div className="relative w-full md:w-[400px] bg-white h-full flex flex-col p-6 animate-slideIn">
+              <div className="flex justify-between mb-6"><h2 className="font-bold text-2xl">CART ({items.length})</h2><button onClick={close}><Icon path={Icons.X}/></button></div>
+              <div className="flex-1 overflow-y-auto space-y-6">
+                {items.map(x => (
+                  <div key={x.id} className="flex gap-4">
+                    <img src={x.image} className="w-20 h-24 object-cover" />
+                    <div className="flex-1">
+                      <div className="flex justify-between"><h3 className="font-bold text-sm">{x.name}</h3><button onClick={() => remove(x.id)}><Icon path={Icons.Trash}/></button></div>
+                      <p className="text-xs text-gray-500 mb-2">{x.category}</p>
+                      <div className="flex justify-between items-center border-t pt-2">
+                        <div className="flex gap-3"><button onClick={() => update(x.id, -1)}>-</button><span>{x.quantity}</span><button onClick={() => update(x.id, 1)}>+</button></div>
+                        <span className="font-bold">₹{x.price * x.quantity}</span>
                       </div>
                     </div>
-                  ))
-                }
+                  </div>
+                ))}
               </div>
-              <div className="p-6 border-t bg-gray-50">
-                <div className="flex justify-between mb-4 font-bold text-xl"><span>TOTAL</span><span>₹{items.reduce((a,c) => a + c.price * c.quantity, 0)}</span></div>
-                <button className="w-full bg-black text-white py-4 font-bold tracking-widest hover:bg-street-red">CHECKOUT</button>
-              </div>
+              <button className="w-full bg-black text-white py-4 font-bold mt-4">CHECKOUT (₹{items.reduce((a,c) => a + c.price*c.quantity, 0)})</button>
             </div>
           </div>
         );
       };
 
-      const AiStylist = () => {
-        const [isOpen, setIsOpen] = useState(false);
-        const [messages, setMessages] = useState([{ role: 'model', text: 'Yo. Need a fit check?' }]);
-        const [input, setInput] = useState('');
+      const AiChat = () => {
+        const [open, setOpen] = useState(false);
+        const [msgs, setMsgs] = useState([{r:'model', t:'Yo. Need fit advice?'}]);
+        const [txt, setTxt] = useState('');
         const [loading, setLoading] = useState(false);
-        const scrollRef = useRef(null);
+        const endRef = useRef(null);
+        
+        useEffect(() => endRef.current?.scrollIntoView(), [msgs, open]);
 
-        useEffect(() => { scrollRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isOpen]);
-
-        const handleSend = async () => {
-          if (!input.trim() || loading) return;
-          const userText = input;
-          setInput('');
-          setMessages(prev => [...prev, { role: 'user', text: userText }]);
-          setLoading(true);
-
+        const send = async () => {
+          if (!txt || loading) return;
+          const uTxt = txt; setTxt(''); setMsgs(p => [...p, {r:'user', t:uTxt}]); setLoading(true);
           try {
-            if (!API_KEY || API_KEY.includes('YOUR_API_KEY')) throw new Error("API Key Missing");
-            const genAI = new GoogleGenerativeAI(API_KEY);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", systemInstruction: SYSTEM_INSTRUCTION });
-            const chat = model.startChat({ history: messages.map(m => ({ role: m.role, parts: [{ text: m.text }] })) });
-            const result = await chat.sendMessage(userText);
-            setMessages(prev => [...prev, { role: 'model', text: result.response.text() }]);
-          } catch (e) {
-            setMessages(prev => [...prev, { role: 'model', text: "Error: Check API Key or Connection." }]);
-          }
+            if(!API_KEY || API_KEY.includes('YOUR_API')) throw new Error('Key Missing');
+            const gen = new GoogleGenerativeAI(API_KEY);
+            const model = gen.getGenerativeModel({ model: "gemini-1.5-flash", systemInstruction: "You are a streetwear stylist. Short, edgy answers." });
+            const chat = model.startChat({ history: msgs.map(m => ({ role: m.r === 'user' ? 'user' : 'model', parts: [{ text: m.t }] })) });
+            const res = await chat.sendMessage(uTxt);
+            setMsgs(p => [...p, {r:'model', t:res.response.text()}]);
+          } catch(e) { setMsgs(p => [...p, {r:'model', t:'Stylist offline (Check API Key)'}]); }
           setLoading(false);
         };
 
         return (
           <>
-            <button onClick={() => setIsOpen(true)} className={`fixed bottom-6 right-6 z-40 bg-black text-white p-4 rounded-full shadow-xl hover:scale-110 transition ${isOpen ? 'hidden' : 'flex'}`}>
-              <Icon path={Icons.Sparkles} />
-            </button>
-            <div className={`fixed bottom-6 right-6 w-[90vw] md:w-[350px] h-[500px] bg-white border border-black shadow-2xl z-50 flex flex-col transition-all origin-bottom-right ${isOpen ? 'scale-100' : 'scale-0'}`}>
-              <div className="bg-black text-white p-4 flex justify-between items-center"><span className="font-bold tracking-widest flex items-center gap-2">AI STYLIST</span><button onClick={() => setIsOpen(false)}><Icon path={Icons.X} /></button></div>
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-                {messages.map((m, i) => (
-                  <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`p-3 max-w-[85%] text-sm ${m.role === 'user' ? 'bg-black text-white' : 'bg-white border text-black'}`}>{m.text}</div>
-                  </div>
-                ))}
-                {loading && <div className="text-xs text-gray-500 animate-pulse">Computing...</div>}
-                <div ref={scrollRef}></div>
+            <button onClick={() => setOpen(true)} className={`fixed bottom-6 right-6 z-40 bg-black text-white p-4 rounded-full shadow-xl ${open?'hidden':'flex'}`}><Icon path={Icons.Sparkles}/></button>
+            <div className={`fixed bottom-6 right-6 w-[90vw] md:w-[320px] h-[450px] bg-white border border-black z-50 flex flex-col transition-all origin-bottom-right ${open?'scale-100':'scale-0'}`}>
+              <div className="bg-black text-white p-3 flex justify-between font-bold"><span>AI STYLIST</span><button onClick={() => setOpen(false)}><Icon path={Icons.X}/></button></div>
+              <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-50">
+                {msgs.map((m,i) => <div key={i} className={`flex ${m.r==='user'?'justify-end':'justify-start'}`}><div className={`p-2 text-sm max-w-[85%] ${m.r==='user'?'bg-black text-white':'bg-white border'}`}>{m.t}</div></div>)}
+                {loading && <div className="text-xs animate-pulse">Thinking...</div>}
+                <div ref={endRef}></div>
               </div>
-              <div className="p-4 border-t flex gap-2">
-                <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSend()} placeholder="Ask for outfits..." className="flex-1 bg-gray-100 p-2 text-sm outline-none border focus:border-black" />
-                <button onClick={handleSend} className="bg-black text-white p-2 hover:bg-red-600"><Icon path={Icons.Send}/></button>
-              </div>
+              <div className="p-3 border-t flex gap-2"><input value={txt} onChange={e=>setTxt(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} className="flex-1 bg-gray-100 p-2 text-sm outline-none" placeholder="Ask..." /><button onClick={send}><Icon path={Icons.Send}/></button></div>
             </div>
           </>
         );
       };
 
       const App = () => {
-        const [isCartOpen, setIsCartOpen] = useState(false);
         const [cart, setCart] = useState([]);
+        const [isCartOpen, setCartOpen] = useState(false);
 
-        const addToCart = (p) => {
+        const add = (p) => {
           setCart(prev => {
             const ex = prev.find(i => i.id === p.id);
-            return ex ? prev.map(i => i.id === p.id ? { ...i, quantity: i.quantity + 1 } : i) : [...prev, { ...p, quantity: 1 }];
+            return ex ? prev.map(i => i.id === p.id ? {...i, quantity: i.quantity+1} : i) : [...prev, {...p, quantity:1}];
           });
-          setIsCartOpen(true);
+          setCartOpen(true);
         };
-        const updateQty = (id, d) => setCart(prev => prev.map(i => i.id === id ? { ...i, quantity: Math.max(1, i.quantity + d) } : i));
-        const removeItem = (id) => setCart(prev => prev.filter(i => i.id !== id));
 
         return (
           <div className="min-h-screen flex flex-col font-sans">
-            <Marquee />
-            <Navbar cartCount={cart.reduce((a,c) => a + c.quantity, 0)} onCartClick={() => setIsCartOpen(true)} />
+            <div className="bg-black text-white py-2 overflow-hidden"><div className="whitespace-nowrap animate-marquee text-xs font-bold tracking-widest">FREE SHIPPING WORLDWIDE • NEW DROP • URBAN CHAOS • FREE SHIPPING WORLDWIDE • NEW DROP • URBAN CHAOS</div></div>
+            <Navbar count={cart.reduce((a,c)=>a+c.quantity,0)} onOpen={() => setCartOpen(true)} />
             
             <main className="flex-grow">
               <Hero />
-              
               <section className="max-w-7xl mx-auto px-6 py-20">
-                <h2 className="font-display font-bold text-4xl mb-10 tracking-tighter">LATEST DROP</h2>
+                <h2 className="text-4xl font-display font-bold mb-10">LATEST DROP</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  {PRODUCTS.map(p => <ProductCard key={p.id} product={p} onAddToCart={addToCart} />)}
+                  {PRODUCTS.map(p => (
+                    <div key={p.id} className="group cursor-pointer" onClick={() => add(p)}>
+                      <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 mb-4">
+                        <img src={p.image} className="w-full h-full object-cover group-hover:scale-105 transition duration-700" />
+                        <button className="absolute bottom-4 right-4 bg-white p-3 rounded-full opacity-0 group-hover:opacity-100 transition"><Icon path={Icons.Plus}/></button>
+                      </div>
+                      <h3 className="font-bold">{p.name}</h3><p className="text-sm">₹{p.price}</p>
+                    </div>
+                  ))}
                 </div>
               </section>
 
-              {/* Added Newsletter back */}
-              <Newsletter />
+              {/* NEWSLETTER SECTION - Explicitly placed */}
+              <section className="bg-gray-100 py-20 border-t">
+                <div className="max-w-4xl mx-auto text-center px-6">
+                  <h3 className="font-display font-bold text-3xl mb-4">JOIN THE MOVEMENT</h3>
+                  <p className="text-gray-500 mb-8">Get exclusive access to secret drops.</p>
+                  <div className="flex max-w-md mx-auto">
+                    <input type="email" placeholder="EMAIL ADDRESS" className="flex-1 p-4 outline-none border focus:border-black" />
+                    <button className="bg-black text-white px-8 font-bold hover:bg-red-600">JOIN</button>
+                  </div>
+                </div>
+              </section>
             </main>
 
-            {/* Added Footer back */}
+            {/* FOOTER SECTION - Explicitly placed */}
             <footer className="bg-black text-white py-12 border-t border-gray-800">
               <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-                <h2 className="font-display font-bold text-2xl tracking-tighter">STREET.CO</h2>
-                <div className="flex gap-6 text-sm text-gray-400 font-medium">
-                  <a href="#" className="hover:text-white transition-colors">INSTAGRAM</a>
-                  <a href="#" className="hover:text-white transition-colors">TIKTOK</a>
-                  <a href="#" className="hover:text-white transition-colors">TWITTER</a>
+                <h2 className="font-display font-bold text-2xl">STREET.CO</h2>
+                <div className="flex gap-6 text-sm text-gray-400">
+                  <a href="#" className="hover:text-white">INSTAGRAM</a>
+                  <a href="#" className="hover:text-white">TIKTOK</a>
+                  <a href="#" className="hover:text-white">TWITTER</a>
                 </div>
-                <p className="text-xs text-gray-600">© 2024 STREET.CO. ALL RIGHTS RESERVED.</p>
+                <p className="text-xs text-gray-600">© 2024 STREET.CO</p>
               </div>
             </footer>
 
-            <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} items={cart} onUpdate={updateQty} onRemove={removeItem} />
-            <AiStylist />
+            <Cart open={isCartOpen} close={() => setCartOpen(false)} items={cart} 
+              update={(id, d) => setCart(p => p.map(i => i.id===id ? {...i, quantity: Math.max(1, i.quantity+d)} : i))} 
+              remove={(id) => setCart(p => p.filter(i => i.id!==id))} 
+            />
+            <AiChat />
           </div>
         );
       };

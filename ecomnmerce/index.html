@@ -42,13 +42,8 @@
     </script>
 
     <style>
-      .no-scrollbar::-webkit-scrollbar {
-          display: none;
-      }
-      .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-      }
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 
     <script type="importmap">
@@ -67,379 +62,164 @@
   <body class="bg-white text-black antialiased">
     <div id="root"></div>
 
+    <script>
+      window.onerror = function(message, source, lineno, colno, error) {
+        document.getElementById('root').innerHTML = `
+          <div style="padding: 20px; color: red; font-family: monospace; background: #xffe; border: 1px solid red; margin: 20px;">
+            <h2 style="font-weight: bold; font-size: 1.2em;">Javascript Error (White Screen Fix)</h2>
+            <p><strong>Error:</strong> ${message}</p>
+            <p><strong>Line:</strong> ${lineno}</p>
+            <p>Please check your code or API Key configuration.</p>
+          </div>
+        `;
+      };
+    </script>
+
     <script type="text/babel" data-type="module">
       import React, { useState, useEffect, useRef } from 'react';
       import { createRoot } from 'react-dom/client';
       import { ShoppingBag, Search, Menu, Plus, X, Minus, Trash2, Sparkles, Send } from 'lucide-react';
-      // Corrected Import
-      import { GoogleGenAI } from '@google/generative-ai';
+      
+      // FIX 1: Correct Import Name for the Stable SDK
+      import { GoogleGenerativeAI } from '@google/generative-ai';
 
-      // --- ENVIRONMENT SETUP ---
-      // IMPORTANT: Replace 'YOUR_API_KEY_HERE' with your actual Gemini API Key
-      const API_KEY = 'YOUR_API_KEY_HERE'; 
-
-      window.process = {
-        env: {
-          API_KEY: API_KEY
-        }
-      };
+      // FIX 2: Define API Key here directly to avoid process.env issues
+      // REPLACE THIS TEXT WITH YOUR ACTUAL KEY
+      const API_KEY = "YOUR_API_KEY_HERE"; 
 
       // --- CONSTANTS ---
       const PRODUCTS = [
-        {
-          id: '1',
-          name: 'VOID HOODIE / HEAVYWEIGHT',
-          price: 4500,
-          category: 'TOPS',
-          image: 'https://images.unsplash.com/photo-1578587018452-892bacefd3f2?q=80&w=1000&auto=format&fit=crop',
-          isNew: true
-        },
-        {
-          id: '2',
-          name: 'TACTICAL CARGO V2',
-          price: 3200,
-          category: 'BOTTOMS',
-          image: 'https://images.unsplash.com/photo-1552160753-117159821e01?q=80&w=1000&auto=format&fit=crop'
-        },
-        {
-          id: '3',
-          name: 'DISTRESSED OVERSIZED TEE',
-          price: 1800,
-          category: 'TOPS',
-          image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=1000&auto=format&fit=crop'
-        },
-        {
-          id: '4',
-          name: 'UTILITY VEST / BLACK',
-          price: 5600,
-          category: 'OUTERWEAR',
-          image: 'https://images.unsplash.com/photo-1559582798-678dfc71ccd8?q=80&w=1000&auto=format&fit=crop'
-        },
-        {
-          id: '5',
-          name: 'RAW HEM DENIM',
-          price: 4200,
-          category: 'BOTTOMS',
-          image: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=1000&auto=format&fit=crop'
-        },
-        {
-          id: '6',
-          name: 'MONOLITH PUFFER',
-          price: 8900,
-          category: 'OUTERWEAR',
-          image: 'https://images.unsplash.com/photo-1545959728-6b7123aa6323?q=80&w=1000&auto=format&fit=crop',
-          isNew: true
-        },
-        {
-          id: '7',
-          name: 'INDUSTRIAL BELT',
-          price: 1200,
-          category: 'ACCESSORIES',
-          image: 'https://images.unsplash.com/photo-1616150537482-1df6c52a326b?q=80&w=1000&auto=format&fit=crop'
-        },
-        {
-          id: '8',
-          name: 'CYBERPUNK BEANIE',
-          price: 900,
-          category: 'ACCESSORIES',
-          image: 'https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?q=80&w=1000&auto=format&fit=crop'
-        }
+        { id: '1', name: 'VOID HOODIE', price: 4500, category: 'TOPS', image: 'https://images.unsplash.com/photo-1578587018452-892bacefd3f2?q=80&w=1000&auto=format&fit=crop', isNew: true },
+        { id: '2', name: 'TACTICAL CARGO', price: 3200, category: 'BOTTOMS', image: 'https://images.unsplash.com/photo-1552160753-117159821e01?q=80&w=1000&auto=format&fit=crop' },
+        { id: '3', name: 'OVERSIZED TEE', price: 1800, category: 'TOPS', image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=1000&auto=format&fit=crop' },
+        { id: '4', name: 'UTILITY VEST', price: 5600, category: 'OUTERWEAR', image: 'https://images.unsplash.com/photo-1559582798-678dfc71ccd8?q=80&w=1000&auto=format&fit=crop' },
+        { id: '5', name: 'RAW HEM DENIM', price: 4200, category: 'BOTTOMS', image: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=1000&auto=format&fit=crop' },
+        { id: '6', name: 'MONOLITH PUFFER', price: 8900, category: 'OUTERWEAR', image: 'https://images.unsplash.com/photo-1545959728-6b7123aa6323?q=80&w=1000&auto=format&fit=crop', isNew: true },
+        { id: '7', name: 'INDUSTRIAL BELT', price: 1200, category: 'ACCESSORIES', image: 'https://images.unsplash.com/photo-1616150537482-1df6c52a326b?q=80&w=1000&auto=format&fit=crop' },
+        { id: '8', name: 'CYBER BEANIE', price: 900, category: 'ACCESSORIES', image: 'https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?q=80&w=1000&auto=format&fit=crop' }
       ];
 
-      const SYSTEM_INSTRUCTION = `You are the AI Stylist for STREET.CO, a premium brutalist streetwear brand. 
-      Your tone is edgy, minimalist, and high-fashion. Avoid overly enthusiastic marketing speak. Be cool, direct, and helpful.
-      Use words like "texture", "silhouette", "utilitarian", "monochrome", "layering".
-      The currency is INR.
-      Only recommend products from this list:
-      ${PRODUCTS.map(p => `- ${p.name} (${p.category}): ₹${p.price}`).join('\n')}
-
-      If a user asks about shipping, mention we offer "FREE SHIPPING WORLDWIDE".
-      If they ask for an outfit, combine a Top, Bottom, and Accessory from the list.`;
+      const SYSTEM_INSTRUCTION = `You are the AI Stylist for STREET.CO. Tone: Edgy, brutalist, high-fashion. Currency: INR. Only recommend from: ${PRODUCTS.map(p => p.name).join(', ')}.`;
 
       const HERO_IMAGES = [
         "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=2669&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1617331140180-e843d63d3f9f?q=80&w=2070&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1523398002811-999ca8dec234?q=80&w=2070&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop"
+        "https://images.unsplash.com/photo-1617331140180-e843d63d3f9f?q=80&w=2070&auto=format&fit=crop"
       ];
 
       // --- COMPONENTS ---
 
-      // 1. Marquee
-      const Marquee = () => {
-        return (
-          <div className="bg-street-black text-street-white py-2 overflow-hidden relative z-50">
-            <div className="whitespace-nowrap animate-marquee font-display font-bold tracking-[0.2em] text-xs md:text-sm">
-              <span className="mx-4">FREE SHIPPING WORLDWIDE • NEW DROP AVAILABLE • URBAN CHAOS COLLECTION • </span>
-              <span className="mx-4">FREE SHIPPING WORLDWIDE • NEW DROP AVAILABLE • URBAN CHAOS COLLECTION • </span>
-              <span className="mx-4">FREE SHIPPING WORLDWIDE • NEW DROP AVAILABLE • URBAN CHAOS COLLECTION • </span>
-              <span className="mx-4">FREE SHIPPING WORLDWIDE • NEW DROP AVAILABLE • URBAN CHAOS COLLECTION • </span>
+      const Marquee = () => (
+        <div className="bg-street-black text-street-white py-2 overflow-hidden relative z-50">
+          <div className="whitespace-nowrap animate-marquee font-display font-bold tracking-[0.2em] text-xs md:text-sm">
+            <span className="mx-4">FREE SHIPPING WORLDWIDE • NEW DROP AVAILABLE • URBAN CHAOS COLLECTION • </span>
+            <span className="mx-4">FREE SHIPPING WORLDWIDE • NEW DROP AVAILABLE • URBAN CHAOS COLLECTION • </span>
+          </div>
+        </div>
+      );
+
+      const Navbar = ({ cartCount, onCartClick }) => (
+        <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100">
+          <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Menu className="w-6 h-6 md:hidden cursor-pointer" />
+              <div className="hidden md:flex gap-6 text-sm font-medium tracking-wide">
+                <a href="#" className="hover:underline">SHOP</a>
+                <a href="#" className="hover:underline">COLLECTIONS</a>
+                <a href="#" className="text-street-red">SALE</a>
+              </div>
+            </div>
+            <div className="absolute left-1/2 transform -translate-x-1/2">
+              <h1 className="font-display font-bold text-2xl md:text-3xl tracking-tighter">STREET.CO</h1>
+            </div>
+            <div className="flex items-center gap-6">
+              <Search className="w-5 h-5 cursor-pointer" />
+              <div className="relative cursor-pointer" onClick={onCartClick}>
+                <ShoppingBag className="w-5 h-5" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-street-red text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
+                    {cartCount}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
-        );
-      };
+        </nav>
+      );
 
-      // 2. Navbar
-      const Navbar = ({ cartCount, onCartClick }) => {
-        return (
-          <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100">
-            <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Menu className="w-6 h-6 md:hidden cursor-pointer hover:text-gray-600 transition-colors" />
-                <div className="hidden md:flex gap-6 text-sm font-medium tracking-wide">
-                  <a href="#" className="hover:underline decoration-2 underline-offset-4">SHOP</a>
-                  <a href="#" className="hover:underline decoration-2 underline-offset-4">COLLECTIONS</a>
-                  <a href="#" className="hover:underline decoration-2 underline-offset-4 text-street-red">SALE</a>
-                </div>
-              </div>
-
-              <div className="absolute left-1/2 transform -translate-x-1/2">
-                <h1 className="font-display font-bold text-2xl md:text-3xl tracking-tighter">STREET.CO</h1>
-              </div>
-
-              <div className="flex items-center gap-6">
-                <Search className="w-5 h-5 cursor-pointer hover:text-gray-600 transition-colors" />
-                <div className="relative cursor-pointer" onClick={onCartClick}>
-                  <ShoppingBag className="w-5 h-5 hover:text-gray-600 transition-colors" />
-                  {cartCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-street-red text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
-                      {cartCount}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </nav>
-        );
-      };
-
-      // 3. Hero
       const Hero = () => {
-        const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
+        const [index, setIndex] = useState(0);
         useEffect(() => {
-          const interval = setInterval(() => {
-            setCurrentImageIndex((prevIndex) => (prevIndex + 1) % HERO_IMAGES.length);
-          }, 4000);
-
-          return () => clearInterval(interval);
+          const t = setInterval(() => setIndex(i => (i + 1) % HERO_IMAGES.length), 4000);
+          return () => clearInterval(t);
         }, []);
 
         return (
-          <section className="relative h-[90vh] w-full bg-street-black overflow-hidden">
+          <section className="relative h-[80vh] w-full bg-street-black overflow-hidden">
             <div className="absolute inset-0">
-              {HERO_IMAGES.map((img, index) => (
-                <div
-                  key={img}
-                  className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                    index === currentImageIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
-                  }`}
-                >
-                  <img 
-                    src={img} 
-                    alt={`Hero Background ${index + 1}`} 
-                    className="w-full h-full object-cover opacity-60"
-                  />
+              {HERO_IMAGES.map((img, i) => (
+                <div key={img} className={`absolute inset-0 transition-opacity duration-1000 ${i === index ? 'opacity-100' : 'opacity-0'}`}>
+                  <img src={img} className="w-full h-full object-cover opacity-60" />
                 </div>
               ))}
-              <div className="absolute inset-0 bg-gradient-to-t from-street-black via-transparent to-transparent z-20 pointer-events-none"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-street-black via-transparent to-transparent"></div>
             </div>
-
             <div className="relative h-full flex flex-col items-center justify-center text-center px-4 z-30">
-              <h2 className="font-display font-bold text-6xl md:text-9xl text-white tracking-tighter mb-6 leading-none mix-blend-difference">
-                URBAN<br/>CHAOS
-              </h2>
-              <p className="text-gray-300 font-sans tracking-widest text-sm md:text-lg mb-8 uppercase max-w-md drop-shadow-md">
-                Embrace the noise. Define your silhouette. The new collection is here.
-              </p>
-              <button className="bg-white text-black font-display font-bold text-lg px-8 py-3 tracking-widest hover:bg-street-red hover:text-white transition-all duration-300 transform hover:scale-105">
-                SHOP COLLECTION
-              </button>
+              <h2 className="font-display font-bold text-6xl md:text-9xl text-white tracking-tighter mb-6 mix-blend-difference">URBAN<br/>CHAOS</h2>
+              <button className="bg-white text-black font-display font-bold text-lg px-8 py-3 tracking-widest hover:bg-street-red hover:text-white transition-all">SHOP NOW</button>
             </div>
           </section>
         );
       };
 
-      // 4. ProductCard
-      const ProductCard = ({ product, onAddToCart }) => {
-        return (
-          <div className="group relative cursor-pointer">
-            <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
-              <img 
-                src={product.image} 
-                alt={product.name} 
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              
-              {product.isNew && (
-                <div className="absolute top-2 left-2 bg-street-black text-white text-[10px] font-bold px-2 py-1 tracking-widest">
-                  NEW DROP
-                </div>
-              )}
-
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAddToCart(product);
-                }}
-                className="absolute bottom-4 right-4 bg-white text-black p-3 rounded-full opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:bg-street-black hover:text-white shadow-lg"
-              >
-                <Plus className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="mt-4 space-y-1">
-              <div className="flex justify-between items-start">
-                <h3 className="font-display font-bold text-lg tracking-wide group-hover:text-gray-600 transition-colors">
-                  {product.name}
-                </h3>
-                <span className="font-sans font-medium text-sm">₹{product.price.toLocaleString()}</span>
-              </div>
-              <p className="text-xs text-gray-500 font-sans tracking-wider">{product.category}</p>
-            </div>
+      const ProductCard = ({ product, onAddToCart }) => (
+        <div className="group relative cursor-pointer">
+          <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
+            <img src={product.image} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            {product.isNew && <div className="absolute top-2 left-2 bg-black text-white text-[10px] font-bold px-2 py-1">NEW</div>}
+            <button onClick={(e) => { e.stopPropagation(); onAddToCart(product); }} className="absolute bottom-4 right-4 bg-white text-black p-3 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-black hover:text-white">
+              <Plus className="w-5 h-5" />
+            </button>
           </div>
-        );
-      };
+          <div className="mt-4">
+            <h3 className="font-display font-bold text-lg">{product.name}</h3>
+            <p className="text-sm">₹{product.price}</p>
+          </div>
+        </div>
+      );
 
-      // 5. Newsletter
-      const Newsletter = () => {
-        return (
-          <section className="bg-street-gray py-20 mt-12 border-t border-gray-200">
-            <div className="max-w-4xl mx-auto text-center px-6">
-              <h3 className="font-display font-bold text-3xl md:text-4xl mb-4 tracking-widest uppercase">Join the Movement</h3>
-              <p className="text-gray-500 mb-8 max-w-lg mx-auto font-sans tracking-wide">
-                Subscribe to our newsletter for exclusive drops, early access, and secret sales.
-              </p>
-              <div className="flex flex-col sm:flex-row max-w-md mx-auto gap-0">
-                <input 
-                  type="email" 
-                  placeholder="ENTER EMAIL" 
-                  className="flex-1 bg-white px-4 py-4 text-sm font-medium border border-gray-200 focus:border-black focus:outline-none focus:ring-0 placeholder-gray-400 font-sans"
-                />
-                <button className="bg-black text-white px-8 py-4 font-display font-bold tracking-widest text-sm hover:bg-street-red transition-colors duration-300 uppercase">
-                  Join
-                </button>
-              </div>
-            </div>
-          </section>
-        );
-      };
-
-      // 6. CartDrawer
       const CartDrawer = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem }) => {
-        const subtotal = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-
+        if (!isOpen) return null;
         return (
-          <>
-            <div 
-              className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity duration-300 ${
-                isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-              }`}
-              onClick={onClose}
-            />
-            <div className={`fixed top-0 right-0 h-full w-full md:w-[450px] bg-white/95 backdrop-blur-xl z-50 shadow-2xl transform transition-transform duration-500 ease-out flex flex-col ${
-              isOpen ? 'translate-x-0' : 'translate-x-full'
-            }`}>
-              
-              <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                <h2 className="font-display font-bold text-2xl tracking-tighter">YOUR CART ({items.length})</h2>
-                <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                  <X className="w-6 h-6" />
-                </button>
+          <div className="fixed inset-0 z-50 flex justify-end">
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
+            <div className="relative w-full md:w-[450px] bg-white h-full shadow-2xl flex flex-col animate-slideIn">
+              <div className="p-6 border-b flex justify-between items-center">
+                <h2 className="font-display font-bold text-2xl">CART ({items.length})</h2>
+                <button onClick={onClose}><X className="w-6 h-6" /></button>
               </div>
-
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                {items.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-gray-400 space-y-4">
-                    <span className="font-display text-xl">CART IS EMPTY</span>
-                    <p className="font-sans text-sm text-center">Looks like you haven't found your vibe yet.</p>
-                    <button onClick={onClose} className="text-black underline font-bold text-sm hover:text-street-red">
-                      CONTINUE SHOPPING
-                    </button>
-                  </div>
-                ) : (
-                  items.map((item) => (
+                {items.length === 0 ? <div className="text-center text-gray-400 mt-20">Cart Empty</div> : 
+                  items.map(item => (
                     <div key={item.id} className="flex gap-4">
-                      <div className="w-24 h-32 flex-shrink-0 bg-gray-100">
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                      </div>
-                      <div className="flex-1 flex flex-col justify-between py-1">
+                      <img src={item.image} className="w-20 h-24 object-cover bg-gray-100" />
+                      <div className="flex-1 flex flex-col justify-between">
                         <div>
-                          <div className="flex justify-between items-start">
-                            <h3 className="font-display font-bold text-sm tracking-wide line-clamp-2 pr-4">{item.name}</h3>
-                            <button 
-                              onClick={() => onRemoveItem(item.id)}
-                              className="text-gray-400 hover:text-street-red transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                          <p className="text-xs text-gray-500 mt-1">{item.category}</p>
+                          <div className="flex justify-between"><h3 className="font-bold text-sm">{item.name}</h3><button onClick={() => onRemoveItem(item.id)}><Trash2 className="w-4 h-4 text-gray-400" /></button></div>
+                          <p className="text-xs text-gray-500">{item.category}</p>
                         </div>
-                        
-                        <div className="flex justify-between items-end">
-                          <div className="flex items-center border border-gray-300">
-                            <button 
-                              onClick={() => onUpdateQuantity(item.id, -1)}
-                              className="p-1 hover:bg-gray-100"
-                              disabled={item.quantity <= 1}
-                            >
-                              <Minus className="w-3 h-3" />
-                            </button>
-                            <span className="w-8 text-center text-xs font-bold">{item.quantity}</span>
-                            <button 
-                              onClick={() => onUpdateQuantity(item.id, 1)}
-                              className="p-1 hover:bg-gray-100"
-                            >
-                              <Plus className="w-3 h-3" />
-                            </button>
-                          </div>
-                          <span className="font-sans font-bold text-sm">₹{(item.price * item.quantity).toLocaleString()}</span>
+                        <div className="flex justify-between items-center">
+                          <div className="flex border"><button onClick={() => onUpdateQuantity(item.id, -1)} className="p-1 px-2">-</button><span className="px-2 text-sm pt-1">{item.quantity}</span><button onClick={() => onUpdateQuantity(item.id, 1)} className="p-1 px-2">+</button></div>
+                          <span className="font-bold text-sm">₹{item.price * item.quantity}</span>
                         </div>
                       </div>
                     </div>
                   ))
-                )}
+                }
               </div>
-
-              {items.length > 0 && (
-                <div className="p-6 border-t border-gray-100 bg-white">
-                  <div className="flex justify-between items-center mb-6">
-                    <span className="font-display text-lg font-medium">SUBTOTAL</span>
-                    <span className="font-display text-xl font-bold">₹{subtotal.toLocaleString()}</span>
-                  </div>
-                  <p className="text-xs text-gray-500 mb-4 text-center">Shipping & taxes calculated at checkout.</p>
-                  <button className="w-full bg-black text-white font-display font-bold text-lg py-4 tracking-widest hover:bg-street-red transition-colors">
-                    CHECKOUT
-                  </button>
-                </div>
-              )}
-            </div>
-          </>
-        );
-      };
-
-      // 7. AiStylist
-      const LoadingIndicator = () => {
-        const [text, setText] = useState('ANALYZING');
-        
-        useEffect(() => {
-          const steps = ['ANALYZING', 'SCANNING_DB', 'MATCHING_VIBE', 'CALCULATING'];
-          let i = 0;
-          const interval = setInterval(() => {
-            i = (i + 1) % steps.length;
-            setText(steps[i]);
-          }, 600);
-          return () => clearInterval(interval);
-        }, []);
-
-        return (
-          <div className="flex justify-start">
-            <div className="bg-black text-white px-4 py-3 flex items-center gap-3">
-              <div className="w-1.5 h-1.5 bg-street-red animate-ping" />
-              <span className="font-display font-bold text-xs tracking-[0.2em]">
-                {text}<span className="animate-pulse">_</span>
-              </span>
+              <div className="p-6 border-t bg-gray-50">
+                <div className="flex justify-between mb-4 font-bold text-xl"><span>TOTAL</span><span>₹{items.reduce((a,c) => a + c.price * c.quantity, 0)}</span></div>
+                <button className="w-full bg-black text-white py-4 font-bold tracking-widest hover:bg-street-red">CHECKOUT</button>
+              </div>
             </div>
           </div>
         );
@@ -447,220 +227,99 @@
 
       const AiStylist = () => {
         const [isOpen, setIsOpen] = useState(false);
-        const [messages, setMessages] = useState([
-          { role: 'model', text: 'Yo. I\'m your stylist. What vibe are you looking for today?' }
-        ]);
+        const [messages, setMessages] = useState([{ role: 'model', text: 'Yo. Need a fit check?' }]);
         const [input, setInput] = useState('');
-        const [isLoading, setIsLoading] = useState(false);
-        const messagesEndRef = useRef(null);
+        const [loading, setLoading] = useState(false);
+        const scrollRef = useRef(null);
 
-        const scrollToBottom = () => {
-          messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-        };
-
-        useEffect(() => {
-          scrollToBottom();
-        }, [messages, isOpen]);
+        useEffect(() => { scrollRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isOpen]);
 
         const handleSend = async () => {
-          if (!input.trim() || isLoading) return;
-
-          const userMessage = input.trim();
+          if (!input.trim() || loading) return;
+          const userText = input;
           setInput('');
-          setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
-          setIsLoading(true);
+          setMessages(prev => [...prev, { role: 'user', text: userText }]);
+          setLoading(true);
 
           try {
-            const apiKey = window.process.env.API_KEY;
-            if (!apiKey || apiKey === 'YOUR_API_KEY_HERE') {
-              throw new Error('API Key missing');
-            }
-
-            // Correct SDK Usage
-            const genAI = new GoogleGenAI(apiKey);
-            const model = genAI.getGenerativeModel({ 
-                model: "gemini-1.5-flash",
-                systemInstruction: SYSTEM_INSTRUCTION 
-            });
+            if (!API_KEY || API_KEY.includes('YOUR_API_KEY')) throw new Error("API Key not set");
             
-            // Build chat history
-            const history = messages.map(m => ({
-                role: m.role,
-                parts: [{ text: m.text }]
-            }));
-
-            const chat = model.startChat({
-                history: history,
-            });
-
-            const result = await chat.sendMessage(userMessage);
-            const reply = result.response.text();
-
-            setMessages(prev => [...prev, { role: 'model', text: reply }]);
-          } catch (error) {
-            console.error('AI Error:', error);
-            const errorMsg = error.message === 'API Key missing' 
-              ? "Missing API Key. Check the source code line 73." 
-              : "Connection lost. Try again later.";
-            setMessages(prev => [...prev, { role: 'model', text: errorMsg }]);
-          } finally {
-            setIsLoading(false);
+            // FIX 3: Correct Class Instantiation
+            const genAI = new GoogleGenerativeAI(API_KEY);
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", systemInstruction: SYSTEM_INSTRUCTION });
+            
+            const chat = model.startChat({ history: messages.map(m => ({ role: m.role, parts: [{ text: m.text }] })) });
+            const result = await chat.sendMessage(userText);
+            const response = await result.response;
+            setMessages(prev => [...prev, { role: 'model', text: response.text() }]);
+          } catch (e) {
+            setMessages(prev => [...prev, { role: 'model', text: "System offline. Check API Key." }]);
+            console.error(e);
           }
+          setLoading(false);
         };
 
         return (
           <>
-            <button 
-              onClick={() => setIsOpen(true)}
-              className={`fixed bottom-6 right-6 z-40 bg-black text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform duration-300 group ${isOpen ? 'hidden' : 'flex'}`}
-            >
-              <Sparkles className="w-6 h-6 group-hover:animate-pulse text-street-red" />
+            <button onClick={() => setIsOpen(true)} className={`fixed bottom-6 right-6 z-40 bg-black text-white p-4 rounded-full shadow-xl hover:scale-110 transition ${isOpen ? 'hidden' : 'flex'}`}>
+              <Sparkles className="w-6 h-6 text-street-red" />
             </button>
-
-            <div className={`fixed bottom-6 right-6 w-[90vw] md:w-[350px] h-[500px] bg-white border border-black shadow-2xl z-50 flex flex-col transition-all duration-300 origin-bottom-right ${isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'}`}>
-              
-              <div className="bg-black text-white p-4 flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-street-red" />
-                  <h3 className="font-display font-bold tracking-wide">AI STYLIST</h3>
-                </div>
-                <button onClick={() => setIsOpen(false)} className="hover:text-street-red">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
+            <div className={`fixed bottom-6 right-6 w-[90vw] md:w-[350px] h-[500px] bg-white border border-black shadow-2xl z-50 flex flex-col transition-all origin-bottom-right ${isOpen ? 'scale-100' : 'scale-0'}`}>
+              <div className="bg-black text-white p-4 flex justify-between items-center"><span className="font-bold tracking-widest flex items-center gap-2"><Sparkles className="w-4 h-4 text-red-500"/> AI STYLIST</span><button onClick={() => setIsOpen(false)}><X className="w-5 h-5"/></button></div>
               <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-                {messages.map((msg, idx) => (
-                  <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] p-3 text-sm ${
-                      msg.role === 'user' 
-                        ? 'bg-black text-white' 
-                        : 'bg-white border border-gray-200 text-black'
-                    }`}>
-                      {msg.text}
-                    </div>
+                {messages.map((m, i) => (
+                  <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`p-3 max-w-[85%] text-sm ${m.role === 'user' ? 'bg-black text-white' : 'bg-white border text-black'}`}>{m.text}</div>
                   </div>
                 ))}
-                {isLoading && <LoadingIndicator />}
-                <div ref={messagesEndRef} />
+                {loading && <div className="text-xs text-gray-500 animate-pulse">Computing...</div>}
+                <div ref={scrollRef}></div>
               </div>
-
-              <div className="p-4 bg-white border-t border-gray-100 flex gap-2">
-                <input 
-                  type="text" 
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Ask for recommendations..."
-                  className="flex-1 bg-gray-100 px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
-                />
-                <button 
-                  onClick={handleSend}
-                  disabled={isLoading}
-                  className="bg-black text-white p-2 hover:bg-street-red transition-colors disabled:opacity-50"
-                >
-                  <Send className="w-4 h-4" />
-                </button>
+              <div className="p-4 border-t flex gap-2">
+                <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSend()} placeholder="Ask for outfits..." className="flex-1 bg-gray-100 p-2 text-sm outline-none border focus:border-black" />
+                <button onClick={handleSend} className="bg-black text-white p-2 hover:bg-red-600"><Send className="w-4 h-4"/></button>
               </div>
             </div>
           </>
         );
       };
 
-      // --- APP COMPONENT ---
       const App = () => {
         const [isCartOpen, setIsCartOpen] = useState(false);
-        const [cartItems, setCartItems] = useState([]);
+        const [cart, setCart] = useState([]);
 
-        const addToCart = (product) => {
-          setCartItems(prev => {
-            const existing = prev.find(item => item.id === product.id);
-            if (existing) {
-              return prev.map(item => 
-                item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-              );
-            }
-            return [...prev, { ...product, quantity: 1 }];
+        const addToCart = (p) => {
+          setCart(prev => {
+            const ex = prev.find(i => i.id === p.id);
+            return ex ? prev.map(i => i.id === p.id ? { ...i, quantity: i.quantity + 1 } : i) : [...prev, { ...p, quantity: 1 }];
           });
           setIsCartOpen(true);
         };
 
-        const updateQuantity = (id, delta) => {
-          setCartItems(prev => prev.map(item => {
-            if (item.id === id) {
-              return { ...item, quantity: Math.max(1, item.quantity + delta) };
-            }
-            return item;
-          }));
-        };
-
-        const removeItem = (id) => {
-          setCartItems(prev => prev.filter(item => item.id !== id));
-        };
-
-        const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+        const updateQty = (id, d) => setCart(prev => prev.map(i => i.id === id ? { ...i, quantity: Math.max(1, i.quantity + d) } : i));
+        const removeItem = (id) => setCart(prev => prev.filter(i => i.id !== id));
 
         return (
           <div className="min-h-screen flex flex-col font-sans">
             <Marquee />
-            <Navbar cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
-            
+            <Navbar cartCount={cart.reduce((a,c) => a + c.quantity, 0)} onCartClick={() => setIsCartOpen(true)} />
             <main className="flex-grow">
               <Hero />
-              
-              <section className="max-w-7xl mx-auto px-6 py-24">
-                <div className="flex justify-between items-end mb-12">
-                  <h2 className="font-display font-bold text-4xl md:text-5xl tracking-tighter">LATEST DROP</h2>
-                  <span className="font-sans text-sm text-gray-500 tracking-widest hidden md:block">FW24 COLLECTION // 001</span>
-                </div>
-                
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
-                  {PRODUCTS.map(product => (
-                    <ProductCard 
-                      key={product.id} 
-                      product={product} 
-                      onAddToCart={addToCart} 
-                    />
-                  ))}
+              <section className="max-w-7xl mx-auto px-6 py-20">
+                <h2 className="font-display font-bold text-4xl mb-10 tracking-tighter">LATEST DROP</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  {PRODUCTS.map(p => <ProductCard key={p.id} product={p} onAddToCart={addToCart} />)}
                 </div>
               </section>
-
-              <Newsletter />
             </main>
-
-            <footer className="bg-black text-white py-12 border-t border-gray-800">
-              <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-                <h2 className="font-display font-bold text-2xl tracking-tighter">STREET.CO</h2>
-                <div className="flex gap-6 text-sm text-gray-400 font-medium">
-                  <a href="#" className="hover:text-white transition-colors">INSTAGRAM</a>
-                  <a href="#" className="hover:text-white transition-colors">TIKTOK</a>
-                  <a href="#" className="hover:text-white transition-colors">TWITTER</a>
-                </div>
-                <p className="text-xs text-gray-600">© 2024 STREET.CO. ALL RIGHTS RESERVED.</p>
-              </div>
-            </footer>
-
-            <CartDrawer 
-              isOpen={isCartOpen} 
-              onClose={() => setIsCartOpen(false)} 
-              items={cartItems}
-              onUpdateQuantity={updateQuantity}
-              onRemoveItem={removeItem}
-            />
-
+            <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} items={cart} onUpdateQuantity={updateQty} onRemoveItem={removeItem} />
             <AiStylist />
           </div>
         );
       };
 
-      // --- MOUNT ---
-      const rootElement = document.getElementById('root');
-      const root = createRoot(rootElement);
-      root.render(
-        <React.StrictMode>
-          <App />
-        </React.StrictMode>
-      );
+      const root = createRoot(document.getElementById('root'));
+      root.render(<App />);
     </script>
   </body>
 </html>

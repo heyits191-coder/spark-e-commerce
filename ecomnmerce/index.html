@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>STREET.CO</title>
+    <title>STREET.CO - Full Version</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -11,6 +11,19 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Oswald:wght@400;500;700&display=swap" rel="stylesheet">
     
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="importmap">
+    {
+      "imports": {
+        "@google/generative-ai": "https://esm.sh/@google/generative-ai@0.1.3"
+      }
+    }
+    </script>
+
     <script>
       tailwind.config = {
         theme: {
@@ -20,22 +33,10 @@
               display: ['Oswald', 'sans-serif'],
             },
             colors: {
-              street: {
-                black: '#000000',
-                white: '#FFFFFF',
-                gray: '#F3F3F3',
-                red: '#FF0000',
-              }
+              street: { black: '#000000', white: '#FFFFFF', gray: '#F3F3F3', red: '#FF0000' }
             },
-            animation: {
-              'marquee': 'marquee 25s linear infinite',
-            },
-            keyframes: {
-              marquee: {
-                '0%': { transform: 'translateX(0%)' },
-                '100%': { transform: 'translateX(-100%)' },
-              }
-            }
+            animation: { 'marquee': 'marquee 25s linear infinite' },
+            keyframes: { marquee: { '0%': { transform: 'translateX(0%)' }, '100%': { transform: 'translateX(-100%)' } } }
           },
         },
       }
@@ -44,50 +45,42 @@
     <style>
       .no-scrollbar::-webkit-scrollbar { display: none; }
       .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      body { opacity: 0; transition: opacity 0.5s ease-in; } 
     </style>
-
-    <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@18.2.0",
-        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-        "lucide-react": "https://esm.sh/lucide-react@0.263.1",
-        "@google/generative-ai": "https://esm.sh/@google/generative-ai@0.1.3"
-      }
-    }
-    </script>
-
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  </head>
-  <body class="bg-white text-black antialiased">
+</head>
+<body class="bg-white text-black antialiased">
     <div id="root"></div>
 
     <script>
-      window.onerror = function(message, source, lineno, colno, error) {
-        document.getElementById('root').innerHTML = `
-          <div style="padding: 20px; color: red; font-family: monospace; background: #xffe; border: 1px solid red; margin: 20px;">
-            <h2 style="font-weight: bold; font-size: 1.2em;">Javascript Error (White Screen Fix)</h2>
-            <p><strong>Error:</strong> ${message}</p>
-            <p><strong>Line:</strong> ${lineno}</p>
-            <p>Please check your code or API Key configuration.</p>
-          </div>
-        `;
-      };
+      window.onload = () => document.body.style.opacity = '1';
     </script>
 
     <script type="text/babel" data-type="module">
-      import React, { useState, useEffect, useRef } from 'react';
-      import { createRoot } from 'react-dom/client';
-      import { ShoppingBag, Search, Menu, Plus, X, Minus, Trash2, Sparkles, Send } from 'lucide-react';
-      
-      // FIX 1: Correct Import Name for the Stable SDK
-      import { GoogleGenerativeAI } from '@google/generative-ai';
+      const { useState, useEffect, useRef } = React;
+      import { GoogleGenerativeAI } from "@google/generative-ai";
 
-      // FIX 2: Define API Key here directly to avoid process.env issues
-      // REPLACE THIS TEXT WITH YOUR ACTUAL KEY
+      // ----------------------------------------------------
+      // IMPORTANT: PASTE YOUR API KEY HERE
+      // ----------------------------------------------------
       const API_KEY = "YOUR_API_KEY_HERE"; 
+      // ----------------------------------------------------
 
-      // --- CONSTANTS ---
+      // --- ICONS (SVG Code direct to prevent crashing) ---
+      const Icon = ({ path }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">{path}</svg>;
+      
+      const Icons = {
+        Menu: <path d="M4 6h16M4 12h16M4 18h16" />,
+        Search: <path d="m21 21-4.3-4.3M11 8a7 7 0 1 0 0 14 7 7 0 0 0 0-14Z" />,
+        Bag: <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z M3 6h18 M16 10a4 4 0 0 1-8 0" />,
+        Plus: <path d="M5 12h14M12 5v14" />,
+        Minus: <path d="M5 12h14" />,
+        X: <path d="M18 6 6 18M6 6l12 12" />,
+        Trash: <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2M10 11v6M14 11v6" />,
+        Sparkles: <path d="m12 3-1.9 5.8a2 2 0 0 1-1.2 1.3l-5.8 1.9 5.8 1.9a2 2 0 0 1 1.3 1.3l1.9 5.8 1.9-5.8a2 2 0 0 1 1.3-1.3l5.8-1.9-5.8-1.9a2 2 0 0 1-1.3-1.3Z" />,
+        Send: <path d="m22 2-7 20-4-9-9-4Z M22 2 11 13" />
+      };
+
+      // --- DATA ---
       const PRODUCTS = [
         { id: '1', name: 'VOID HOODIE', price: 4500, category: 'TOPS', image: 'https://images.unsplash.com/photo-1578587018452-892bacefd3f2?q=80&w=1000&auto=format&fit=crop', isNew: true },
         { id: '2', name: 'TACTICAL CARGO', price: 3200, category: 'BOTTOMS', image: 'https://images.unsplash.com/photo-1552160753-117159821e01?q=80&w=1000&auto=format&fit=crop' },
@@ -101,13 +94,7 @@
 
       const SYSTEM_INSTRUCTION = `You are the AI Stylist for STREET.CO. Tone: Edgy, brutalist, high-fashion. Currency: INR. Only recommend from: ${PRODUCTS.map(p => p.name).join(', ')}.`;
 
-      const HERO_IMAGES = [
-        "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=2669&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1617331140180-e843d63d3f9f?q=80&w=2070&auto=format&fit=crop"
-      ];
-
       // --- COMPONENTS ---
-
       const Marquee = () => (
         <div className="bg-street-black text-street-white py-2 overflow-hidden relative z-50">
           <div className="whitespace-nowrap animate-marquee font-display font-bold tracking-[0.2em] text-xs md:text-sm">
@@ -121,7 +108,7 @@
         <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100">
           <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Menu className="w-6 h-6 md:hidden cursor-pointer" />
+              <div className="md:hidden"><Icon path={Icons.Menu} /></div>
               <div className="hidden md:flex gap-6 text-sm font-medium tracking-wide">
                 <a href="#" className="hover:underline">SHOP</a>
                 <a href="#" className="hover:underline">COLLECTIONS</a>
@@ -132,14 +119,10 @@
               <h1 className="font-display font-bold text-2xl md:text-3xl tracking-tighter">STREET.CO</h1>
             </div>
             <div className="flex items-center gap-6">
-              <Search className="w-5 h-5 cursor-pointer" />
+              <Icon path={Icons.Search} />
               <div className="relative cursor-pointer" onClick={onCartClick}>
-                <ShoppingBag className="w-5 h-5" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-street-red text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
-                    {cartCount}
-                  </span>
-                )}
+                <Icon path={Icons.Bag} />
+                {cartCount > 0 && <span className="absolute -top-2 -right-2 bg-street-red text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">{cartCount}</span>}
               </div>
             </div>
           </div>
@@ -148,15 +131,16 @@
 
       const Hero = () => {
         const [index, setIndex] = useState(0);
-        useEffect(() => {
-          const t = setInterval(() => setIndex(i => (i + 1) % HERO_IMAGES.length), 4000);
-          return () => clearInterval(t);
-        }, []);
+        const images = [
+          "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=2669&auto=format&fit=crop",
+          "https://images.unsplash.com/photo-1617331140180-e843d63d3f9f?q=80&w=2070&auto=format&fit=crop"
+        ];
+        useEffect(() => { const t = setInterval(() => setIndex(i => (i + 1) % images.length), 4000); return () => clearInterval(t); }, []);
 
         return (
           <section className="relative h-[80vh] w-full bg-street-black overflow-hidden">
             <div className="absolute inset-0">
-              {HERO_IMAGES.map((img, i) => (
+              {images.map((img, i) => (
                 <div key={img} className={`absolute inset-0 transition-opacity duration-1000 ${i === index ? 'opacity-100' : 'opacity-0'}`}>
                   <img src={img} className="w-full h-full object-cover opacity-60" />
                 </div>
@@ -171,13 +155,37 @@
         );
       };
 
+      // --- ADDED BACK: NEWSLETTER ---
+      const Newsletter = () => {
+        return (
+          <section className="bg-street-gray py-20 mt-12 border-t border-gray-200">
+            <div className="max-w-4xl mx-auto text-center px-6">
+              <h3 className="font-display font-bold text-3xl md:text-4xl mb-4 tracking-widest uppercase">Join the Movement</h3>
+              <p className="text-gray-500 mb-8 max-w-lg mx-auto font-sans tracking-wide">
+                Subscribe to our newsletter for exclusive drops, early access, and secret sales.
+              </p>
+              <div className="flex flex-col sm:flex-row max-w-md mx-auto gap-0">
+                <input 
+                  type="email" 
+                  placeholder="ENTER EMAIL" 
+                  className="flex-1 bg-white px-4 py-4 text-sm font-medium border border-gray-200 focus:border-black focus:outline-none focus:ring-0 placeholder-gray-400 font-sans"
+                />
+                <button className="bg-black text-white px-8 py-4 font-display font-bold tracking-widest text-sm hover:bg-street-red transition-colors duration-300 uppercase">
+                  Join
+                </button>
+              </div>
+            </div>
+          </section>
+        );
+      };
+
       const ProductCard = ({ product, onAddToCart }) => (
         <div className="group relative cursor-pointer">
           <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
             <img src={product.image} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
             {product.isNew && <div className="absolute top-2 left-2 bg-black text-white text-[10px] font-bold px-2 py-1">NEW</div>}
-            <button onClick={(e) => { e.stopPropagation(); onAddToCart(product); }} className="absolute bottom-4 right-4 bg-white text-black p-3 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-black hover:text-white">
-              <Plus className="w-5 h-5" />
+            <button onClick={(e) => { e.stopPropagation(); onAddToCart(product); }} className="absolute bottom-4 right-4 bg-white text-black p-3 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-black hover:text-white flex items-center justify-center">
+              <Icon path={Icons.Plus} />
             </button>
           </div>
           <div className="mt-4">
@@ -187,7 +195,7 @@
         </div>
       );
 
-      const CartDrawer = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem }) => {
+      const CartDrawer = ({ isOpen, onClose, items, onUpdate, onRemove }) => {
         if (!isOpen) return null;
         return (
           <div className="fixed inset-0 z-50 flex justify-end">
@@ -195,7 +203,7 @@
             <div className="relative w-full md:w-[450px] bg-white h-full shadow-2xl flex flex-col animate-slideIn">
               <div className="p-6 border-b flex justify-between items-center">
                 <h2 className="font-display font-bold text-2xl">CART ({items.length})</h2>
-                <button onClick={onClose}><X className="w-6 h-6" /></button>
+                <button onClick={onClose}><Icon path={Icons.X} /></button>
               </div>
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {items.length === 0 ? <div className="text-center text-gray-400 mt-20">Cart Empty</div> : 
@@ -204,11 +212,11 @@
                       <img src={item.image} className="w-20 h-24 object-cover bg-gray-100" />
                       <div className="flex-1 flex flex-col justify-between">
                         <div>
-                          <div className="flex justify-between"><h3 className="font-bold text-sm">{item.name}</h3><button onClick={() => onRemoveItem(item.id)}><Trash2 className="w-4 h-4 text-gray-400" /></button></div>
+                          <div className="flex justify-between"><h3 className="font-bold text-sm">{item.name}</h3><button onClick={() => onRemove(item.id)} className="text-gray-400 hover:text-red-500"><Icon path={Icons.Trash} /></button></div>
                           <p className="text-xs text-gray-500">{item.category}</p>
                         </div>
                         <div className="flex justify-between items-center">
-                          <div className="flex border"><button onClick={() => onUpdateQuantity(item.id, -1)} className="p-1 px-2">-</button><span className="px-2 text-sm pt-1">{item.quantity}</span><button onClick={() => onUpdateQuantity(item.id, 1)} className="p-1 px-2">+</button></div>
+                          <div className="flex border items-center"><button onClick={() => onUpdate(item.id, -1)} className="p-2"><Icon path={Icons.Minus}/></button><span className="px-2 text-sm">{item.quantity}</span><button onClick={() => onUpdate(item.id, 1)} className="p-2"><Icon path={Icons.Plus}/></button></div>
                           <span className="font-bold text-sm">₹{item.price * item.quantity}</span>
                         </div>
                       </div>
@@ -242,19 +250,14 @@
           setLoading(true);
 
           try {
-            if (!API_KEY || API_KEY.includes('YOUR_API_KEY')) throw new Error("API Key not set");
-            
-            // FIX 3: Correct Class Instantiation
+            if (!API_KEY || API_KEY.includes('YOUR_API_KEY')) throw new Error("API Key Missing");
             const genAI = new GoogleGenerativeAI(API_KEY);
             const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", systemInstruction: SYSTEM_INSTRUCTION });
-            
             const chat = model.startChat({ history: messages.map(m => ({ role: m.role, parts: [{ text: m.text }] })) });
             const result = await chat.sendMessage(userText);
-            const response = await result.response;
-            setMessages(prev => [...prev, { role: 'model', text: response.text() }]);
+            setMessages(prev => [...prev, { role: 'model', text: result.response.text() }]);
           } catch (e) {
-            setMessages(prev => [...prev, { role: 'model', text: "System offline. Check API Key." }]);
-            console.error(e);
+            setMessages(prev => [...prev, { role: 'model', text: "Error: Check API Key or Connection." }]);
           }
           setLoading(false);
         };
@@ -262,10 +265,10 @@
         return (
           <>
             <button onClick={() => setIsOpen(true)} className={`fixed bottom-6 right-6 z-40 bg-black text-white p-4 rounded-full shadow-xl hover:scale-110 transition ${isOpen ? 'hidden' : 'flex'}`}>
-              <Sparkles className="w-6 h-6 text-street-red" />
+              <Icon path={Icons.Sparkles} />
             </button>
             <div className={`fixed bottom-6 right-6 w-[90vw] md:w-[350px] h-[500px] bg-white border border-black shadow-2xl z-50 flex flex-col transition-all origin-bottom-right ${isOpen ? 'scale-100' : 'scale-0'}`}>
-              <div className="bg-black text-white p-4 flex justify-between items-center"><span className="font-bold tracking-widest flex items-center gap-2"><Sparkles className="w-4 h-4 text-red-500"/> AI STYLIST</span><button onClick={() => setIsOpen(false)}><X className="w-5 h-5"/></button></div>
+              <div className="bg-black text-white p-4 flex justify-between items-center"><span className="font-bold tracking-widest flex items-center gap-2">AI STYLIST</span><button onClick={() => setIsOpen(false)}><Icon path={Icons.X} /></button></div>
               <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
                 {messages.map((m, i) => (
                   <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -277,7 +280,7 @@
               </div>
               <div className="p-4 border-t flex gap-2">
                 <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSend()} placeholder="Ask for outfits..." className="flex-1 bg-gray-100 p-2 text-sm outline-none border focus:border-black" />
-                <button onClick={handleSend} className="bg-black text-white p-2 hover:bg-red-600"><Send className="w-4 h-4"/></button>
+                <button onClick={handleSend} className="bg-black text-white p-2 hover:bg-red-600"><Icon path={Icons.Send}/></button>
               </div>
             </div>
           </>
@@ -295,7 +298,6 @@
           });
           setIsCartOpen(true);
         };
-
         const updateQty = (id, d) => setCart(prev => prev.map(i => i.id === id ? { ...i, quantity: Math.max(1, i.quantity + d) } : i));
         const removeItem = (id) => setCart(prev => prev.filter(i => i.id !== id));
 
@@ -303,23 +305,42 @@
           <div className="min-h-screen flex flex-col font-sans">
             <Marquee />
             <Navbar cartCount={cart.reduce((a,c) => a + c.quantity, 0)} onCartClick={() => setIsCartOpen(true)} />
+            
             <main className="flex-grow">
               <Hero />
+              
               <section className="max-w-7xl mx-auto px-6 py-20">
                 <h2 className="font-display font-bold text-4xl mb-10 tracking-tighter">LATEST DROP</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                   {PRODUCTS.map(p => <ProductCard key={p.id} product={p} onAddToCart={addToCart} />)}
                 </div>
               </section>
+
+              {/* Added Newsletter back */}
+              <Newsletter />
             </main>
-            <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} items={cart} onUpdateQuantity={updateQty} onRemoveItem={removeItem} />
+
+            {/* Added Footer back */}
+            <footer className="bg-black text-white py-12 border-t border-gray-800">
+              <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+                <h2 className="font-display font-bold text-2xl tracking-tighter">STREET.CO</h2>
+                <div className="flex gap-6 text-sm text-gray-400 font-medium">
+                  <a href="#" className="hover:text-white transition-colors">INSTAGRAM</a>
+                  <a href="#" className="hover:text-white transition-colors">TIKTOK</a>
+                  <a href="#" className="hover:text-white transition-colors">TWITTER</a>
+                </div>
+                <p className="text-xs text-gray-600">© 2024 STREET.CO. ALL RIGHTS RESERVED.</p>
+              </div>
+            </footer>
+
+            <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} items={cart} onUpdate={updateQty} onRemove={removeItem} />
             <AiStylist />
           </div>
         );
       };
 
-      const root = createRoot(document.getElementById('root'));
+      const root = ReactDOM.createRoot(document.getElementById('root'));
       root.render(<App />);
     </script>
-  </body>
+</body>
 </html>
